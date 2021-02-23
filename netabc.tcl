@@ -6,7 +6,7 @@ exec wish "$0" "$@"
 
 # netabc.tcl
 #
-## Copyright (C) 1998-2020 Seymour Shlien
+## Copyright (C) 1998-2021 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.187
-set netabc_date "(October 13 2020 10:00)"
+set netabc_version 0.188
+set netabc_date "(February 23 2021 08:45)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -501,6 +501,7 @@ proc netstate_init {} {
     set netstate(outhtml) [file join [pwd] tune.html]
     set netstate(jslib) ".\js"
     set netstate(mididata) 0
+    set netstate(gchordon) 0
     set netstate(abc_open) ""
     set netstate(webscript) 2
     set netstate(abcenclose) 4
@@ -588,7 +589,10 @@ frame $w
 checkbutton $w.midicheck -text "Include midi data"\
    -variable netstate(mididata) -font $df
 
-grid $w.midicheck -sticky w
+checkbutton $w.gchordon -text "Play gchords"\
+   -variable netstate(gchordon) -font $df
+
+grid $w.midicheck $w.gchordon -sticky w
 
 radiobutton $w.remote -text "remote javascript" -variable netstate(remote)\
    -value 1 -font $df
@@ -1285,6 +1289,7 @@ proc copy_selected_tunes_to_html {filename} {
         seek $edithandle $loc
         set line [find_X_code $edithandle]
         puts $outhandle $line
+        if {$netstate(gchordon)} {puts $outhandle "%%MIDI gchordon"}
         incr n
         while {[string length $line] > 0 } {
             if {$netstate(blank_lines)} {
@@ -1341,7 +1346,7 @@ proc export_to_browser {} {
 
 proc open_help_in_browser {} {
     global netstate
-    exec $netstate(browser) "https://ifdo.ca/~seymour/netabc/" &
+    exec $netstate(browser) "https://netabc.sourceforge.io/" &
     }
 
 
