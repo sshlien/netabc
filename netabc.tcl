@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.188
-set netabc_date "(February 23 2021 08:45)"
+set netabc_version 0.192
+set netabc_date "(February 25 2021 10:15)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -505,6 +505,9 @@ proc netstate_init {} {
     set netstate(abc_open) ""
     set netstate(webscript) 2
     set netstate(abcenclose) 4
+    set netstate(ignoreQ) 0
+    set netstate(tempo) 120
+    set netstate(beatsize) 1/4
 
     set netstate(history_length) 0
     for {set i 0} {$i < 10} {incr i} {set netstate(history$i) ""}
@@ -649,6 +652,18 @@ radiobutton $w.encfrm.4 -text "script vnd" -variable netstate(abcenclose)\
    -value 4 -font $df
 grid $w.encfrm.1 $w.encfrm.2 $w.encfrm.3 $w.encfrm.4 -sticky w
 grid $w.enclab $w.encfrm -sticky w
+
+frame $w.tframe 
+checkbutton $w.tframe.replaceQ -text "replace tempo" -font $df -variable netstate(ignoreQ)
+scale $w.tframe.scale -from 0 -to 480 -length 280\
+         -width 8 -orient horizontal -showvalue true -font $df\
+         -variable netstate(tempo)
+set beatlist {1/4 1/2 3/8 1/8}
+ttk::combobox $w.tframe.beatsize -width 4 -height 7 -textvariable netstate(beatsize)\
+         -font $df -values $beatlist
+label $w.lab -text "Q: unspecified" -width 20 -font $df
+pack $w.tframe.replaceQ $w.tframe.scale $w.tframe.beatsize -side left
+grid $w.lab  $w.tframe -sticky w
 
 
 proc show_config {} {
@@ -1264,6 +1279,29 @@ proc get_next_line {handle} {
     return $line
 }
 
+proc check_for_Q_field {edithandle} {
+    global netstate
+    set i 0
+    set loc [tell $edithandle]
+    set line " "
+    while {[string length $line] > 0 } {
+        if {$netstate(blank_lines)} {
+             set line  [get_nonblank_line $edithandle]} else {
+             set line  [get_next_line $edithandle]
+             }
+        if {[string index $line 0] == "X"} break;
+        incr i 
+        if {$i > 25} break
+        if {[string first "Q:" $line] == 0} {
+            .abc.config.lab configure -text $line
+            seek $edithandle $loc
+            return $line
+            }
+       }  
+   seek $edithandle $loc
+   .abc.config.lab configure -text "Q: unspecified"
+   return ""    
+   }
 
 proc copy_selected_tunes_to_html {filename} {
     #copies or appends all selected tunes to an output file
@@ -1288,6 +1326,7 @@ proc copy_selected_tunes_to_html {filename} {
         set loc $fileseek($i)
         seek $edithandle $loc
         set line [find_X_code $edithandle]
+        set hasQfield [check_for_Q_field $edithandle]"
         puts $outhandle $line
         if {$netstate(gchordon)} {puts $outhandle "%%MIDI gchordon"}
         incr n
@@ -1297,7 +1336,13 @@ proc copy_selected_tunes_to_html {filename} {
                 set line  [get_next_line $edithandle]
 	        }
             if {[string index $line 0] == "X"} break;
-            puts $outhandle $line
+
+           if {$netstate(ignoreQ) && [string first "Q" $line] == 0} {
+                    puts $outhandle "Q:$netstate(beatsize) = $netstate(tempo)"
+                    } else {
+                    puts $outhandle $line
+                    }
+
 	    set loc [string first "V:" $line]
 # The procedure does not handle V: enclosed in brackets
 	    if {$loc ==0} {
@@ -1318,13 +1363,18 @@ proc copy_selected_tunes_to_html {filename} {
 		 set addmidi($vc) 0
 	         }
               }
-            if {[string first "K:" $line] && $addmidi(0) == 1} {
-                 puts $outhandle "%%MIDI program $netstate(voice0)"
-		 puts $outhandle "%%MIDI control 7 $netstate(lvoice0)"
-		 puts $outhandle "%%MIDI control 10 $netstate(pvoice0)"
-		 set addmidi(0) 0
+            if {[string first "K:" $line]} {
+                 if {$addmidi(0) == 1}  {
+                    puts $outhandle "%%MIDI program $netstate(voice0)"
+		    puts $outhandle "%%MIDI control 7 $netstate(lvoice0)"
+		    puts $outhandle "%%MIDI control 10 $netstate(pvoice0)"
+		    set addmidi(0) 0
+                    }
+                 if {[string length $hasQfield] < 2} {
+                    puts $outhandle "Q:$netstate(beatsize) = $netstate(tempo)"
+                    set hasQfield "   " ; #so we do not put another Q
 	         }
-
+            }
          }
 	      
 	 puts $outhandle "\n"
