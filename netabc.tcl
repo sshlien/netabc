@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.192
-set netabc_date "(February 25 2021 10:15)"
+set netabc_version 0.193
+set netabc_date "(March 03 2021 13:20)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -646,11 +646,9 @@ radiobutton $w.encfrm.1 -text "plain" -variable netstate(abcenclose)\
    -value 1 -font $df
 radiobutton $w.encfrm.2 -text "<!-- ->" -variable netstate(abcenclose)\
    -value 2 -font $df
-radiobutton $w.encfrm.3 -text "div class abc" -variable netstate(abcenclose)\
-   -value 3 -font $df
 radiobutton $w.encfrm.4 -text "script vnd" -variable netstate(abcenclose)\
    -value 4 -font $df
-grid $w.encfrm.1 $w.encfrm.2 $w.encfrm.3 $w.encfrm.4 -sticky w
+grid $w.encfrm.1 $w.encfrm.2 $w.encfrm.4 -sticky w
 grid $w.enclab $w.encfrm -sticky w
 
 frame $w.tframe 
@@ -1202,10 +1200,8 @@ set w(0) "abc2svg-1.js"
 set w(1) "snd-1.js"
 set w(2) "follow-1.js"
 set tail "\"></script>\n"
-append scriptlist "	<script src=\"$url$w(0)$tail"
 append scriptlist "	<script src=\"$url$abcweb$tail"
 append scriptlist "	<script src=\"$url$w(1)$tail"
-append scriptlist "	<script src=\"$url$w(2)$tail"
 append scriptlist $styleblock
 return $scriptlist
 }
@@ -1242,7 +1238,6 @@ proc update_preface {} {
    switch $netstate(abcenclose) {
 	1 {append preface "</head>\n<body>\n%abc-2.2\n"}
 	2 {append preface "</head>\n<body>\n%abc-2.2<!--\n"}
-	3 {append preface "</head>\n<body>\n<div class=\"abc\">"}
 	4 {append preface "</head>\n<body>\n<script type=\"text/vnd.abc\" class=\"abc\">"}
 }
 
@@ -1382,7 +1377,6 @@ proc copy_selected_tunes_to_html {filename} {
     switch $netstate(abcenclose) {
        1 {puts $outhandle "\n</body>\n</html>\n"}
        2 {puts $outhandle "\n-->\n</body>\n</html>\n"}
-       3 {puts $outhandle "<\div>\n</body>\n</html>\n"}
        4 {puts $outhandle  "</script>\n</body>\n</html>\n"}
        }
     close $edithandle
