@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.193
-set netabc_date "(March 03 2021 13:20)"
+set netabc_version 0.196
+set netabc_date "(March 07 2021 19:40)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -43,7 +43,9 @@ if {[catch {package require Ttk} error]} {
 # main interface
 #   show_config
 #   open_editor
+#   show_psoptions
 #   show_titles
+#   show_voice
 #   show_message_page
 #   file_browser
 #   setpath
@@ -61,9 +63,9 @@ if {[catch {package require Ttk} error]} {
 #   write_netheader_ini
 #   read_netheader_ini
 #   close_header
-#   create_header_frame
-#   reset_abc_header
-#   make_abc_header_from_array
+#   create_ps_frame
+#   reset_ps_header
+#   make_ps_header_from_array
 #   update_preface
 #   find_X_code
 #   get_nonblank_line
@@ -501,6 +503,9 @@ proc netstate_init {} {
     set netstate(outhtml) [file join [pwd] tune.html]
     set netstate(jslib) ".\js"
     set netstate(mididata) 0
+    set netstate(psdata) 0
+    set netstate(midisrc) 1
+    set netstate(pssrc) 1
     set netstate(gchordon) 0
     set netstate(abc_open) ""
     set netstate(webscript) 2
@@ -563,8 +568,8 @@ pack .abc.file -side top -fill x
 
 set w .abc.functions
 button $w.toc -text "TOC" -font $df -relief groove -bd 3 -command show_titles
-button $w.header -text "Header" -font $df -relief groove -bd 3\
--command show_header
+button $w.header -text "psoptions" -font $df -relief groove -bd 3\
+-command show_psoptions
 button $w.cfg -text "Configure" -font $df -command show_config\
 -relief groove -bd 3
 button $w.v   -text "Voices" -font $df -command show_voice\
@@ -589,19 +594,58 @@ tooltip::tooltip .abc.functions.help "Opens netabc internet site"
 set w .abc.config
 frame $w
 
+frame $w.tframe 
+checkbutton $w.tframe.replaceQ -text "replace tempo" -font $df -variable netstate(ignoreQ)
+scale $w.tframe.scale -from 0 -to 480 -length 240\
+         -width 8 -orient horizontal -showvalue true -font $df\
+         -variable netstate(tempo)
+set beatlist {1/4 1/2 3/8 1/8}
+ttk::combobox $w.tframe.beatsize -width 4 -height 7 -textvariable netstate(beatsize)\
+         -font $df -values $beatlist
+label $w.lab -text "Q: unspecified" -width 20 -font $df -anchor w
+pack $w.tframe.replaceQ $w.tframe.scale $w.tframe.beatsize -side left -anchor w
+grid $w.lab  $w.tframe -sticky w
+
+checkbutton $w.psdata -text "Include ps data"\
+   -variable netstate(psdata) -font $df -command psoptions
+frame $w.pscheck
+radiobutton $w.pscheck.header -text "from header" -font $df\
+    -variable netstate(pssrc) -value 0
+radiobutton $w.pscheck.here -text "from here" -font $df\
+    -variable netstate(pssrc) -value 1
+pack $w.pscheck.header $w.pscheck.here -side left
+grid $w.psdata $w.pscheck -sticky w 
+
 checkbutton $w.midicheck -text "Include midi data"\
-   -variable netstate(mididata) -font $df
+   -variable netstate(mididata) -font $df -command midioptions
+
+frame $w.midisel
+radiobutton $w.midisel.header -text "from header" -font $df\
+    -variable netstate(midisrc) -value 0
+radiobutton $w.midisel.here -text "from here" -font $df\
+    -variable netstate(midisrc) -value 1
+pack $w.midisel.header $w.midisel.here -side left
+
+grid $w.midicheck $w.midisel -sticky w 
 
 checkbutton $w.gchordon -text "Play gchords"\
    -variable netstate(gchordon) -font $df
-
-grid $w.midicheck $w.gchordon -sticky w
+grid $w.gchordon -sticky w
 
 radiobutton $w.remote -text "remote javascript" -variable netstate(remote)\
    -value 1 -font $df
 radiobutton $w.local -text "local javascript" -variable netstate(remote)\
    -value 0 -font $df -command check_for_js_folder
 grid $w.remote $w.local -sticky w
+
+button $w.javascriptlib -text "path to local javascript" -command setpathjslib\
+-font $df
+entry $w.jslib -width 56 -relief sunken -textvariable netstate(jslib)\
+-font $df
+bind .abc.config.jslib <KeyRelease> {
+   update_url_pointer
+   }
+grid $w.javascriptlib $w.jslib -sticky w
 
 button $w.browserbut -text "select browser" -command "setpath browser"\
     -font $df
@@ -615,14 +659,6 @@ entry $w.editor -width 56 -relief sunken -textvariable netstate(editor)\
    -font $df
 grid $w.editbut $w.editor -sticky w
 
-button $w.javascriptlib -text "path to local javascript" -command setpathjslib\
--font $df
-entry $w.jslib -width 56 -relief sunken -textvariable netstate(jslib)\
--font $df
-bind .abc.config.jslib <KeyRelease> {
-   update_url_pointer
-   }
-grid $w.javascriptlib $w.jslib -sticky w
 
 button $w.outbut -text "output html file" -font $df\
     -command "setpath outhtml"
@@ -651,18 +687,34 @@ radiobutton $w.encfrm.4 -text "script vnd" -variable netstate(abcenclose)\
 grid $w.encfrm.1 $w.encfrm.2 $w.encfrm.4 -sticky w
 grid $w.enclab $w.encfrm -sticky w
 
-frame $w.tframe 
-checkbutton $w.tframe.replaceQ -text "replace tempo" -font $df -variable netstate(ignoreQ)
-scale $w.tframe.scale -from 0 -to 480 -length 280\
-         -width 8 -orient horizontal -showvalue true -font $df\
-         -variable netstate(tempo)
-set beatlist {1/4 1/2 3/8 1/8}
-ttk::combobox $w.tframe.beatsize -width 4 -height 7 -textvariable netstate(beatsize)\
-         -font $df -values $beatlist
-label $w.lab -text "Q: unspecified" -width 20 -font $df
-pack $w.tframe.replaceQ $w.tframe.scale $w.tframe.beatsize -side left
-grid $w.lab  $w.tframe -sticky w
 
+proc midioptions {} {
+global netstate
+set w .abc.config.midisel
+if {$netstate(mididata)} {
+  $w.here configure -state normal
+  $w.header configure -state normal
+  } else {
+  $w.here configure -state disable
+  $w.header configure -state disable
+  }
+}
+
+midioptions
+
+proc psoptions {} {
+global netstate
+set w .abc.config.pscheck
+if {$netstate(psdata)} {
+  $w.here configure -state normal
+  $w.header configure -state normal
+  } else {
+  $w.here configure -state disable
+  $w.header configure -state disable
+  }
+}
+
+psoptions
 
 proc show_config {} {
 global exposed_frame
@@ -683,7 +735,7 @@ pack  .abc.titles -side top
 set exposed_frame titles
 }
 
-proc show_header {} {
+proc show_psoptions {} {
 global exposed_frame
 pack forget .abc.$exposed_frame
 pack .abc.header -anchor w
@@ -907,7 +959,8 @@ set netstate(history_length) 1
 # first character position of a line.
 #
 proc title_index {abcfile} {
-    global fileseek netstate
+    global fileseek
+    global netstate
     global item_id
     global index_done
     global df
@@ -932,8 +985,13 @@ proc title_index {abcfile} {
     set midi_header {}
     set ps_header {}
     set nchildren 0
+
+
     while {[gets $titlehandle line] >= 0} {
-        if {[string index $line 0] == "X"} {
+        if {[string first "%%MIDI" $line] == 0 } {
+            append midi_header $line\n
+
+        } elseif {[string index $line 0] == "X"} {
             regexp $pat $line number
             if {$number != 0} {set number [string trimleft $number 0]}
             # 2017-05-05 set filepos
@@ -941,10 +999,7 @@ proc title_index {abcfile} {
 	    if {$filepos < 0} {set filepos 0}
             set srch T
             break
-            }
-        if {[string first "%%MIDI" $line] == 0 } {
-            append midi_header $line\n
-        } elseif {[string first "%%" $line] == 0 } {
+        } elseif {[string first "%%" $line] == 0} { 
             append ps_header $line\n
             if {[string first "%%beginps" $line] == 0} {
               while {[gets $titlehandle line] >= 0} {
@@ -953,7 +1008,8 @@ proc title_index {abcfile} {
                   }
              }
         }
-    }
+   }
+
 
 
     while {[gets $titlehandle line] >= 0} {
@@ -1024,6 +1080,7 @@ proc title_index {abcfile} {
     }
     update
     set ps_header [string trimright $ps_header]
+
 }
 
 proc SortBy {col direction} {
@@ -1140,14 +1197,14 @@ pack forget .abc.header
 pack .abc.titles
 }
 
-proc create_header_frame {} {
+proc create_ps_frame {} {
 global header_array
 global df
 global netstate
 set names [array names header_array]
 set w .abc.header
 foreach c [winfo children $w] {destroy $c}
-button $w.reset -text "reset to initial settings" -command reset_abc_header -font $df
+button $w.reset -text "reset to initial settings" -command reset_ps_header -font $df
 grid $w.reset
 set i 1
 foreach name $names {
@@ -1162,15 +1219,15 @@ grid $w.brklab $w.brkchk -sticky w
 return $i
 }
 
-proc reset_abc_header {} {
+proc reset_ps_header {} {
 global abc_header
 abc_header_to_array $abc_header
-create_header_frame
+create_ps_frame
 }
 
-create_header_frame
+create_ps_frame
 
-proc make_abc_header_from_array {} {
+proc make_ps_header_from_array {} {
 global header_array 
 global musicfont
 global netstate
@@ -1211,10 +1268,11 @@ return $scriptlist
 proc update_preface {} {
    global netstate
    global abc_header
-   #global midi_header
+   global midi_header
    global ps_header
    global musicfont
    global urlpointer
+
 
 
    set html_preamble "<!DOCTYPE HTML>\n<html>\n<head>
@@ -1242,10 +1300,16 @@ proc update_preface {} {
 }
 
 
-   set revised_abc_header [make_abc_header_from_array] 
+   if {$netstate(psdata) && $netstate(pssrc) == 1} {
+          set revised_abc_header [make_ps_header_from_array] 
+          } else {set revised_abc_header ""}
+
    set preface $preface$revised_abc_header
-   if {[string length $ps_header] > 2} {
-	set preface $preface$ps_header}
+   if {[string length $ps_header] > 2 &&\
+       $netstate(pssrc) == 0 &&\
+       $netstate(psdata)} {
+          set preface $preface\n$ps_header
+           }
    return $preface
 }
 
@@ -1303,8 +1367,9 @@ proc copy_selected_tunes_to_html {filename} {
     global fileseek  exec_out
     global ps_header
     global netstate
+    global midi_header
     for {set i 0} {$i < 17} {incr i} {
-      if {$netstate(mididata)} {
+      if {$netstate(mididata) && $netstate(midisrc)} {
        set addmidi($i) 1
        } else {
        set addmidi($i) 0
@@ -1321,9 +1386,12 @@ proc copy_selected_tunes_to_html {filename} {
         set loc $fileseek($i)
         seek $edithandle $loc
         set line [find_X_code $edithandle]
-        set hasQfield [check_for_Q_field $edithandle]"
+        set hasQfield [check_for_Q_field $edithandle]
         puts $outhandle $line
         if {$netstate(gchordon)} {puts $outhandle "%%MIDI gchordon"}
+        if {$netstate(midisrc) == 0 && $netstate(mididata)} {
+            puts $outhandle $midi_header
+            }
         incr n
         while {[string length $line] > 0 } {
             if {$netstate(blank_lines)} {
