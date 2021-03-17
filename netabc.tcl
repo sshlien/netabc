@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.196
-set netabc_date "(March 07 2021 19:40)"
+set netabc_version 0.198
+set netabc_date "(March 17 2021 15:50)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -507,6 +507,7 @@ proc netstate_init {} {
     set netstate(midisrc) 1
     set netstate(pssrc) 1
     set netstate(gchordon) 0
+    set netstate(onetab) 0
     set netstate(abc_open) ""
     set netstate(webscript) 2
     set netstate(abcenclose) 4
@@ -534,6 +535,7 @@ read_netabc_ini $netabc_path
 #
 frame .abc
 frame .abc.file
+label .abc.msg -text "" -fg red
 frame .abc.functions -borderwidth 3
 frame .abc.titles
 
@@ -562,6 +564,7 @@ for {set i 0} {$i < $netstate(history_length)} {incr i} {
             -value $i -variable history_index -command process_history -font $df
 }
 
+pack .abc.msg -fill x
 pack .abc.file.menu -side left  -fill x
 pack .abc.file.entry -side left  -fill x
 pack .abc.file -side top -fill x
@@ -632,6 +635,10 @@ checkbutton $w.gchordon -text "Play gchords"\
    -variable netstate(gchordon) -font $df
 grid $w.gchordon -sticky w
 
+checkbutton $w.onetab -text "Reuse browser tab"\
+   -variable netstate(onetab) -font $df
+grid $w.onetab -sticky w
+
 radiobutton $w.remote -text "remote javascript" -variable netstate(remote)\
    -value 1 -font $df
 radiobutton $w.local -text "local javascript" -variable netstate(remote)\
@@ -672,8 +679,6 @@ radiobutton $w.webfrm.1 -text "abcweb-1" -variable netstate(webscript)\
    -value 1 -font $df
 radiobutton $w.webfrm.2 -text "abcweb1-1" -variable netstate(webscript)\
    -value 2 -font $df 
-#radiobutton $w.web3 -text "abcweb2-1" -variable netstate(webscript)\
-#   -value 3 -font $df 
 grid $w.webfrm.1 $w.webfrm.2 -sticky w
 grid $w.weblab $w.webfrm -sticky w
 label $w.enclab -text "enclose abc" -font $df
@@ -1280,7 +1285,6 @@ proc update_preface {} {
    switch $netstate(webscript) {
      1 {set abcweb abcweb-1.js}
      2 {set abcweb abcweb1-1.js}
-     3 {set abcweb abcweb2-1.js}
      }
 
    set remote_svg_script [make_js_script_list $urlpointer(1) $abcweb]
@@ -1453,8 +1457,28 @@ proc copy_selected_tunes_to_html {filename} {
 
 proc export_to_browser {} {
     global netstate
+    if {$netstate(onetab)} {
+       set browsername [file tail $netstate(browser)]
+       set running [browser_running $browsername]
+       } else {
+       set running -1}
+    if {$running > 0} {
+       .abc.msg configure -text "You can now refresh your browser"
+       after 4000 {.abc.msg configure -text ""}
+       return
+       }
     exec $netstate(browser) file://$netstate(outhtml) &
     }
+
+proc browser_running {browser} {
+global tcl_platform
+if {$tcl_platform(platform) == "windows"} {
+  set tasks [exec tasklist]
+  } else {
+  set tasks [exec ps -A]
+  }
+string first $browser $tasks
+}
 
 proc open_help_in_browser {} {
     global netstate
