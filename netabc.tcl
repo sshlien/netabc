@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.198
-set netabc_date "(March 17 2021 15:50)"
+set netabc_version 0.199
+set netabc_date "(March 28 2021 19:20)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -1258,9 +1258,7 @@ set styleblock "
         svg {display:block}
         @media print{body{margin:0;padding:0;border:0}.nop{display:none}}
         </style>"
-set w(0) "abc2svg-1.js"
 set w(1) "snd-1.js"
-set w(2) "follow-1.js"
 set tail "\"></script>\n"
 append scriptlist "	<script src=\"$url$abcweb$tail"
 append scriptlist "	<script src=\"$url$w(1)$tail"
@@ -1300,7 +1298,7 @@ proc update_preface {} {
    switch $netstate(abcenclose) {
 	1 {append preface "</head>\n<body>\n%abc-2.2\n"}
 	2 {append preface "</head>\n<body>\n%abc-2.2<!--\n"}
-	4 {append preface "</head>\n<body>\n<script type=\"text/vnd.abc\" class=\"abc\">"}
+	4 {append preface "</head>\n<body>\n<script type=\"text/vnd.abc\">"}
 }
 
 
