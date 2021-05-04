@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.199
-set netabc_date "(March 28 2021 19:20)"
+set netabc_version 0.200
+set netabc_date "(May 04 2021 15:40)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -996,7 +996,7 @@ proc title_index {abcfile} {
         if {[string first "%%MIDI" $line] == 0 } {
             append midi_header $line\n
 
-        } elseif {[string index $line 0] == "X"} {
+        } elseif {[string first "X:" $line 0] == 0} {
             regexp $pat $line number
             if {$number != 0} {set number [string trimleft $number 0]}
             # 2017-05-05 set filepos
@@ -1320,7 +1320,7 @@ proc update_preface {} {
 # finds X: command or else returns nothing if eof
 proc find_X_code {handle} {
     set line 1
-    while {[string index $line 0] != "X" && [eof $handle] !=1} {
+    while {[string first "X:" $line 0] != 0 && [eof $handle] !=1} {
         set line [get_nonblank_line $handle]
     }
     return $line
@@ -1350,7 +1350,7 @@ proc check_for_Q_field {edithandle} {
              set line  [get_nonblank_line $edithandle]} else {
              set line  [get_next_line $edithandle]
              }
-        if {[string index $line 0] == "X"} break;
+        if {[string first "X:" $line 0] == 0} break;
         incr i 
         if {$i > 25} break
         if {[string first "Q:" $line] == 0} {
@@ -1400,7 +1400,7 @@ proc copy_selected_tunes_to_html {filename} {
                 set line  [get_nonblank_line $edithandle]} else {
                 set line  [get_next_line $edithandle]
 	        }
-            if {[string index $line 0] == "X"} break;
+            if {[string first "X:" $line 0] == 0} break;
 
            if {$netstate(ignoreQ) && [string first "Q" $line] == 0} {
                     puts $outhandle "Q:$netstate(beatsize) = $netstate(tempo)"
