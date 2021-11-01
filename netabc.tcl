@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.200
-set netabc_date "(May 04 2021 15:40)"
+set netabc_version 0.210
+set netabc_date "(October 31 2021 20:10)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -507,7 +507,7 @@ proc netstate_init {} {
     set netstate(midisrc) 1
     set netstate(pssrc) 1
     set netstate(gchordon) 0
-    set netstate(onetab) 0
+    #set netstate(onetab) 0
     set netstate(abc_open) ""
     set netstate(webscript) 2
     set netstate(abcenclose) 4
@@ -609,6 +609,7 @@ label $w.lab -text "Q: unspecified" -width 20 -font $df -anchor w
 pack $w.tframe.replaceQ $w.tframe.scale $w.tframe.beatsize -side left -anchor w
 grid $w.lab  $w.tframe -sticky w
 
+set w .abc.config
 checkbutton $w.psdata -text "Include ps data"\
    -variable netstate(psdata) -font $df -command psoptions
 frame $w.pscheck
@@ -635,9 +636,9 @@ checkbutton $w.gchordon -text "Play gchords"\
    -variable netstate(gchordon) -font $df
 grid $w.gchordon -sticky w
 
-checkbutton $w.onetab -text "Reuse browser tab"\
-   -variable netstate(onetab) -font $df
-grid $w.onetab -sticky w
+#checkbutton $w.onetab -text "Reuse browser tab"\
+#   -variable netstate(onetab) -font $df
+#grid $w.onetab -sticky w
 
 radiobutton $w.remote -text "remote javascript" -variable netstate(remote)\
    -value 1 -font $df
@@ -691,6 +692,42 @@ radiobutton $w.encfrm.4 -text "script vnd" -variable netstate(abcenclose)\
    -value 4 -font $df
 grid $w.encfrm.1 $w.encfrm.2 $w.encfrm.4 -sticky w
 grid $w.enclab $w.encfrm -sticky w
+
+tooltip::tooltip .abc.config.lab "indicates whether the tempo is specified
+ with a Q: field in the selected tune"
+tooltip::tooltip .abc.config.tframe.replaceQ "allow the specified tempo to be
+replaced in the selected tune"
+tooltip::tooltip .abc.config.tframe.scale "the tempo in beats/minute"
+tooltip::tooltip .abc.config.tframe.beatsize "size of a beat  - usually 1/4"
+tooltip::tooltip .abc.config.pscheck.header "ps formatting information is 
+extracted from the file header"
+tooltip::tooltip .abc.config.psdata "If checked ps formatting\n\
+codes are included."
+tooltip::tooltip .abc.config.pscheck.here "ps formatting information is extracted
+ from the psoptions window."
+tooltip::tooltip .abc.config.midicheck "If check midi commands are inserted"
+tooltip::tooltip .abc.config.midisel.header "Midi commands are extracted from file header"
+tooltip::tooltip .abc.config.midisel.here "Midi commands are extracted from the voice window."
+tooltip::tooltip .abc.config.gchordon "Turn on guitar chords if available"
+tooltip::tooltip .abc.config.remote "The JavaScript code to render the
+abc file is found on the web"
+tooltip::tooltip .abc.config.local "The JavaScript code to render the abc
+file is found on this system."
+tooltip::tooltip .abc.config.javascriptlib "Search for the folder containing
+the JavaScript code on this system"
+tooltip::tooltip .abc.config.jslib "Path to the folder containing the JavaScript code"
+tooltip::tooltip .abc.config.browserbut "Search for the path to the browser executable"
+tooltip::tooltip .abc.config.browser_entry "Path to the browser executable"
+tooltip::tooltip .abc.config.editbut "Search for the path to the text editor"
+tooltip::tooltip .abc.config.editor "Path to the text editor"
+tooltip::tooltip .abc.config.outbut "Select the temporary html file to contain the abc notation."
+tooltip::tooltip .abc.config.outhtml "The path to the temporary html file
+ that will contain the abc notation."
+tooltip::tooltip .abc.config.webfrm.1 "No menu inserted"
+tooltip::tooltip .abc.config.webfrm.2 "Includes a menu to select one of several tunes"
+tooltip::tooltip .abc.config.encfrm.1 "Not recommended if the abc notation contains angle brackets"
+tooltip::tooltip .abc.config.encfrm.2 "abc notation is enclosed in an html comment"
+tooltip::tooltip .abc.config.encfrm.4 "abc notation is inside a script vnd"
 
 
 proc midioptions {} {
@@ -1455,27 +1492,31 @@ proc copy_selected_tunes_to_html {filename} {
 
 proc export_to_browser {} {
     global netstate
-    if {$netstate(onetab)} {
-       set browsername [file tail $netstate(browser)]
-       set running [browser_running $browsername]
-       } else {
-       set running -1}
-    if {$running > 0} {
-       .abc.msg configure -text "You can now refresh your browser"
-       after 4000 {.abc.msg configure -text ""}
-       return
-       }
+    #if {$netstate(onetab)} {
+    #   set browsername [file tail $netstate(browser)]
+    #   set running [browser_running $browsername]
+    #   } else {
+    #   set running -1}
+    #if {$running > 0} {
+    #   .abc.msg configure -text "You can now refresh your browser"
+    #   after 4000 {.abc.msg configure -text ""}
+    #   return
+    #   }
     exec $netstate(browser) file://$netstate(outhtml) &
     }
 
 proc browser_running {browser} {
-global tcl_platform
-if {$tcl_platform(platform) == "windows"} {
-  set tasks [exec tasklist]
-  } else {
-  set tasks [exec ps -A]
-  }
-string first $browser $tasks
+# On Windows Msedge browser is always running in the
+# background. On Linux, firefox does not show up on the
+# list of processes. Decided to remove this option 2021.10.31.
+#global tcl_platform
+#if {$tcl_platform(platform) == "windows"} {
+#  set tasks [exec tasklist]
+#  } else {
+#  set tasks [exec ps -A]
+#  }
+#string first $browser $tasks
+return -1
 }
 
 proc open_help_in_browser {} {

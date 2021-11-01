@@ -12,7 +12,9 @@
     }
   </style>
 </head>
-<body>
+<p> netabc.zip and netabc.exe were updated on October 31 2021.
+<p>
+<h3>Introduction</h3>
 <p>
 Netabc.tcl is a user interface for creating web pages that display the contents
 of abc music notation files using Jef Moine's  
@@ -53,11 +55,262 @@ a trivial task.  Netabc provides several different methods for
 embedding the abc file. It allows you to experiment with the different
 formatting options. Different MIDI musical instruments can
 be assigned to the various voices.
-<p>
-A more detailed description of the program can be found on
-<a href="https://netabc.sourceforge.io/">netabc.sourceforge.io</a>.
 
+<h3>Download </h3>
+
+If you have tcl/tk 8.5 or 8.6 on your system, download
+<a href="https://sourceforge.net/projects/netabc/files/netabc.zip">netabc.zip </a> and extract netabc.tcl.
+If you do not have tcl/tk but you are running on the Windows
+operating system, then download
+<a href="https://sourceforge.net/projects/netabc/files/netabc.exe">netabc.exe </a> .
+<p>
+It is recommended that you make a folder called netabc and
+put one or both of these files inside that folder. 
+This folder will be used to store various files that save
+the state of netabc as well as the temporary html output file.
+<p>
+The program links to the abc2svg JavaScript library on Jef
+Moine's web site; however, if you have a local copy of this library
+on your system, the program can be configured to go to your local
+library. The archive 
+<a href="https://sourceforge.net/projects/netabc/files/js.zip">js.zip </a>
+contains the main files that you need.
+<p>
+This archive becomes outdated very rapidly, since
+Jef Moine creates a new version of this library almost every day.
+You can find this on his 
+<a href="https://chiselapp.com/user/moinejf/repository/abc2svg/timeline">repository</a>.  
+Before you can use this library it is necessary to build it. See
+the <a href="https://chiselapp.com/user/moinejf/repository/abc2svg/doc/trunk/README.md">readme.md</a> for more instructions.
+Guido Gonzato posts a built library on his web site,
+<a href="http://abcplus.sourceforge.net/#abc2svg">abcplus.sourceforge.net</a>
+which he updates frequently.
+
+<p>
+Netabc contains various other convenient features. (1) To prevent
+overloading abc2svg with a large file, netabc forwards only the
+selected portion of the file.  (2) When tempo, formatting or
+MIDI parameters are missing, netabc allows you to embed your
+own parameters into the abc notation.
+
+<h3>Initial Configuration</h3>
+<p>
+On running netabc.tcl for the first time, the program will determine
+which platform it is running (Windows or Linux) and set itself appropriately.
+You should check this setup by clicking on the top <b>Configure</b> button.
+The following image shows how the configuration window may look
+on your system.
+<p>
+<img src = "cfg.gif" alt = "cfg">
+<p>
+The important setup up parameters are in the lower half of the
+window, starting with the radio buttons <b>remote javascript</b>
+and <b>local javascript</b>. By default remote javascript is ticked,
+which tells the generated web page to load the javascript
+code from Jef Moine's web site.
+<p>
+If you are running on Windows, the program will assume that you have
+the Microsoft Edge browser or the Google Chrome browser. If neither
+of these browsers are present, then you need to specify the path to
+a suitable substitute.  Either type this into the entry box
+or use the <b>select browser</b> to find the browser executable
+on your system. On Linux, the program will attempt to connect
+with the Firefox browser.
+<p>
+Similarly, you need to specify the path to your text editor,
+to allow you to view contents of the html file. Notepad.exe is
+the text editor that comes with Windows.
+<p>
+By default, netabc records its html output in a file called
+tune.html; however, you can change its name and path.
+Note that the full path name should be given, especially 
+for the Windows operating system.
+<p>
+If you decide to download the abc2svg javascript library to
+your computer and wish to link to a local version of the library,
+then you should tick the <b>local javascript</b> radio button
+and indicate the path to the library in the appropriate
+entry box. (If you are using the folder browser, note that
+you must be inside this folder and see the Scc1t2 subfolder
+before clicking on the select button.) 
+<p>
+Abcweb can run with one of the 2 web interfaces, abcweb-1.js or
+abcweb1-1.js described in Jef's readme file. Abcweb1-1.js was
+designed to allow the user the choice of a particular tune from a
+selection of tunes. Either interface is fine to use.
+
+<p>
+Certain symbols such as &lt &gt and &amp may occur in the
+abc notation are also html control characters.
+In order to avoid these issues, you can enclose the abc
+notation into one of two structures rather than leaving
+it in the unprotected state (plain). Netabc allows you
+to choose any one of the two methods. <b>Script vnd</b> looks
+a little cleaner. Do not select <b>plain</b> unless you
+know those control characters will never be present in
+your abc file.
+<p>
+The configuration information is stored in the
+in the netabc.ini, so you only need to do this only once.
+At this point you are ready to use netabc.tcl
+
+
+<p>
+Abc2svg can now play guitar chord indications to a limited extent.
+To use this feature, tick the <b>Play gchords</b> check box.
+Unlike abc2midi, the indicated chord is played once and
+continuously until the next guitar chord indication is encountered.
+
+<p>
+Many abc notation music collections do not specify any tempo
+using the Q: field command. By default the music will be played
+at 120 quarter notes per minute. You can change the tempo using
+the at the bottom of the configuration frame. The size of a beat
+is typically 1/4 note, but for some key signatures it may be
+appropriate to use a different beat size such as 1/2 note. The 
+combobox at the left allows you to change the beat size.
+
+<p>
+When the music indicates the tempo, netabc will not alter
+it unless you tick the checkbox labeled <b>replace tempo</b>.
+All tempo markings will be changed to the value specified by
+the slider and combobox. This does not change the input abc file.
+
+
+<p>
+<h3> Usage </h3>
+<p>
+You should have  proper abc files having
+X:, T: and K: fields for every tune. Sample collections can be found
+on my web site <a href="https://ifdo.ca/~seymour/kern2abc/">https://ifdo.ca/~seymour/kern2abc/</a>.
+Load an input abc file using the top <b> file </b> button.
+After loading your input abc file, a table
+of contents (TOC) listing all the tunes in the file will appear.
+<p>
+<img src = "toc.gif" alt = "Table of Contents">
+<p>
+Select one of the tunes and press the <b>Render</b>
+button and hopefully your browser should display the
+common music notation. Clicking on one of the notes should
+start the browser to play the music. The <b>Source</b>
+button will show the html file in a text editor.
+If you wish to see the svg representation, you
+will need to tell your browser to save this to a file.
+<p>
+<h3> More Configurations </h3>
+<p>
+In some circumstances, you may wish to set the formatting parameters
+so that they apply to all the tunes in a collection. If the collection
+consists of string quartets, you may wish to assign the MIDI instruments
+corresponding to the different voices to specific string instruments.
+If you place these settings before the first X: reference statement,
+then they will apply to the entire file. This is called the header
+of the abc notation file. Few abc collection files make use of this
+feature, so you can create such a header inside netabc which will
+accomplish the same thing. You can tell netabc, whether to use the
+header in the file, or the internal representation by ticking the
+appropriate radio button for the ps data and midi data. If you tick
+<b> from here </b>, then they are set in the frames <b>psoptions</b>
+and <b>Voices</b> that described here.
+
+<p>
+The buttons <b>psoptions</b> and <b>Voices</b> allow
+you to control how the music is rendered or played.
+Clicking the <b>ps</b> button will show the following
+window.
+<p>
+<img src = "psoptions.gif" alt = "psoption page">
+<p>
+Abc2svg recognizes all the formatting statements that are
+listed on <a href="http://moinejf.free.fr/abcm2ps-doc/index.html">abcm2ps-doc page</a>. Some of these formatting parameters can be set by clicking
+the <b>psoptions</b> button.
+Enter the new values in one of entry boxes.
+You can restore these values to their initial settings 
+using the top button.
+<p>
+The values are saved in file called netheader.ini when you
+exit the program and reloaded when you restart the program. The
+netheader.ini is a plain text file that you can edit. For example,
+you can insert other format parameters. Alternatively you can
+delete some of the parameters using their default values.
+<p>
+Line-breaks in the abc notated file generate line-breaks in the
+typeset score. If you check the box <b>ignore all line breaks</b>,
+then the software will automatically place score line breaks.
+This is useful for some files that contain only one measure per
+line.
+<p>
+Certain midi indications in the abc file may cause problems
+for the abc2svg JavaScript code. If you leave the <b>Include midi data</b> 
+unchecked, all the %%MIDI instructions in the abc input will be
+suppressed. All the voices will be assigned to the acoustic piano.
+In order to be able to control the voice assignments
+when you click the <b>Voices</b> button, then you should allow
+midi data to be included.
+<p> 
+Many abc files do not assign MIDI program numbers (MIDI instruments)
+to the voices. The <b>Voices</b> button allows you to do this
+and set the loudness and direct the sound to either the left
+or right speaker using the <b>pan</b> slider.
+<p>
+<img src = "voices.gif" alt = "midi voices">
+<p>
+If the tune does not have any voices,
+then the MIDI programs, volume, and pan
+associated with voice 0 apply to that tune.
+The current version of the abc2svg library does not appear to
+respond to these volume and pan controls.
+<p>
+The <b>Help</b> shows this documentation on your web browser.
+
+<h3>Running netabc with local JavaScript Library</h3>
+<p> Download the file 
+<a href="https://sourceforge.net/projects/netabc/files/js.zip">js.zip </a>
+ extract the
+folder <b>js</b> from this archive and place it in the
+same directory where netabc.tcl is located. Configure netabc
+to <b>local js</b>. The library requires the following files
+and folders as a minimum:
+<pre>
+abc2svg-1.js
+abc2web-1.js
+abc2web1-1.js
+abc2web2-1.js
+follow-1.js
+MIDI-1.js
+page-1.js
+snd-1.js
+and the folder Scc1t2
+</pre>
+<p>
+The Scc1t2 directory contains all the instruments extracted from the
+Scc1t2.sf2, font adapted by Microsoft from the Roland SC-55.
+
+<h3> Limitations </h3>
+<p>
+Abc2svg will report various errors that it encounters in the
+abc transcription but it presently does not indicate the
+correct line number in the user interface. The user should
+find other means (eg abcm2ps) for identifying and fixing these
+problems.
+<p>
+Almost all desktop browsers come with development tools that
+are useful for debugging web pages. Pressing the keys
+cntl-shift-j brings up the console of this tool which may
+be useful if something goes wrong. For example, the web page
+may fail to find one of the JavaScript files.
+
+
+<h3>Saving the sheet music to a pdf file</h3>
+
+If your browser has a printer icon, click on this icon.
+Otherwise, right click on the web page and hopefully there
+should be an option to print.
+
+<p>
+<img src = "fy733-bisque.gif">
 
 </body>
 </html>
+
 
