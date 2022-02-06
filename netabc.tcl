@@ -6,7 +6,7 @@ exec wish "$0" "$@"
 
 # netabc.tcl
 #
-## Copyright (C) 1998-2021 Seymour Shlien
+## Copyright (C) 1998-2022 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,8 @@ exec wish "$0" "$@"
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-set netabc_version 0.210
-set netabc_date "(October 31 2021 20:10)"
+set netabc_version 0.211
+set netabc_date "(February 06 2022)"
 set app_title "netabc $netabc_version $netabc_date"
 set tcl_version [info tclversion]
 
@@ -1401,12 +1401,32 @@ proc check_for_Q_field {edithandle} {
    return ""    
    }
 
+
+# The next two functions are used to map a string in V: to a number.
+proc  init_voicecodebook {} {
+    global voicecodes
+    array unset voicecode
+    set voicecodes 0
+}
+
+proc vcode2numb {code} {
+    global voicecodes voicecode
+    if {[info exist voicecode($code)]} {
+        return $voicecode($code)} else {
+        incr voicecodes
+        set voicecode($code) $voicecodes}
+    return $voicecodes
+}
+
+
+
 proc copy_selected_tunes_to_html {filename} {
     #copies or appends all selected tunes to an output file
     global fileseek  exec_out
     global ps_header
     global netstate
     global midi_header
+    init_voicecodebook
     for {set i 0} {$i < 17} {incr i} {
       if {$netstate(mididata) && $netstate(midisrc)} {
        set addmidi($i) 1
